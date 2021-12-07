@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, StyleSheet, Text, View, ScrollView } from "react-native";
 // import SoundPlayer from 'react-native-sound-player'
 // import TrackPlayer from 'react-native-track-player';
+import Sound from 'react-native-sound'
 
 import Voice, {
     SpeechResultsEvent,
@@ -14,71 +15,26 @@ export default function App() {
     console.log('does this get reset somehow?')
     // const [results, setResults] = useState([] as string[]);
 
+    const audioTrackURL = 'https://previews.customer.envatousercontent.com/files/207000702/preview.mp3' //'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3' //`https://previews.customer.envatousercontent.com/files/207000702/preview.mp3` //'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3';
 
+    const [isPlaying, setIsPlaying] = useState(false)
+    const [song, setSong] = useState({})
+    const [isListening, setIsListening] = useState(false);
 
-    // const [rhymes, setRhymes] = useState([] as string[])
-    // useEffect(() => {
-
-    //     Voice.onSpeechError = onSpeechError;
-    //     // Voice.onSpeechResults = onSpeechResults;
-    //     Voice.onSpeechPartialResults = onSpeechPartialResults;
-    //     Voice.onSpeechRecognized = onSpeechRecognized
-    //     Voice.onSpeechEnd = onSpeechEnd;
-    //     return () => {
-    //         Voice.destroy().then(Voice.removeAllListeners);
-    //     };
-    // }, []);
-
-
-    // console.log(verse, lyrics, ' y not')
     async function onSpeechEnd(e: SpeechEndEvent) {
-        // console.log(e, 'end', lyrics, verse)
-        // setLyrics([...lyrics, ...verse])
+
     }
 
 
     async function onSpeechRecognized(e: SpeechRecognizedEvent) {
         console.log(e, ' recognized!!')
-        // if (e.isFinal)
-        // setLyrics([...lyrics, ...verse])
+
     }
 
-    //This continues to add to the string 
 
     async function onSpeechPartialResults(e: SpeechResultsEvent) {
         // console.log(e.value, ' SpeechPartialResultsEvent')
     }
-
-    // async function onSpeechResults(e: SpeechResultsEvent) {
-
-    //     let words = e.value[0].split(' ')
-    //     console.log(words, 'results', lyrics)
-    //     setLyrics([...lyrics, ...words])
-    //     setVerse(words)
-
-    // let word = e.value[0].split(' ').pop()
-    // console.log(e.value[0], word, 'word')
-    // // await Voice.stop()
-    // await Voice.start("en-US");
-
-    //Filter for only new words.  
-
-
-
-
-    // fetch(`https://api.datamuse.com/words?rel_rhy=${word}`)
-    //     .then(res => res.json())
-    //     .then(results => {
-    //         let newRhymes = [...rhymes, ...results.slice(0, 3)]
-    //         console.log('rhymes', newRhymes)
-    //         if (results)
-    //             setRhymes(newRhymes)
-    //     })
-    //     .catch(console.error)
-    // setResults(e.value ?? []);
-    // }
-
-
 
 
 
@@ -86,39 +42,6 @@ export default function App() {
         console.log(e, '000');
     }
 
-
-
-    return (
-        <View style={{ width: '100%' }} >
-            <View>
-                <Listen />
-
-            </View>
-            {/* <View style={{
-                justifyContent: 'space-evenly',
-                alignItems: 'center',
-                height: '80%',
-                width: '100%',
-                backgroundColor: 'white',
-                padding: 20,
-                flexDirection: 'row',
-                display: 'flex',
-            }}> */}
-            <ShowLyrics />
-            {/* <View><Text style={{ fontSize: 20 }}>Longer</Text></View>
-                <View><Text style={{ fontSize: 20 }}>Keep</Text></View>
-                <View><Text style={{ fontSize: 20 }}>Words</Text></View>
-                <View><Text style={{ fontSize: 20 }}>Typing</Text></View>
-                <View><Text style={{ fontSize: 20 }}>Them</Text></View> */}
-
-            {/* </View> */}
-        </View>
-    );
-}
-
-
-function Listen() {
-    const [isListening, setIsListening] = useState(false);
 
     async function toggleListening() {
         console.log(isListening, '??!!=-=-=-==-?', Voice.start)
@@ -144,12 +67,91 @@ function Listen() {
 
     }
 
-    return (<Button
-        title={isListening ? "Stop Recognizing" : "Start Recognizing"}
-        onPress={toggleListening}
+    const playTrack = () => {
+        console.log('play', isPlaying)
+        toggleListening()
+        Sound.setCategory('Playback');
+        if (!isPlaying) {
 
-    />)
+
+            // Load the sound file 'whoosh.mp3' from the app bundle
+            // See notes below about preloading sounds within initialization code below.
+            var whoosh = new Sound(audioTrackURL, '', (error) => {
+                if (error) {
+                    console.log('failed to load the sound', error);
+                    return;
+                }
+                // loaded successfully
+                console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+
+
+                // Play the sound with an onEnd callback
+                whoosh.play((success) => {
+                    if (success) {
+                        console.log('successfully finished playing');
+                    } else {
+                        console.log('playback failed due to audio decoding errors');
+                    }
+                });
+            });
+            setSong(whoosh)
+        } else {
+            song.stop()
+        }
+
+        setIsPlaying(!isPlaying)
+    }
+
+
+
+    return (
+        <View style={{ width: '100%' }} >
+            <View>
+
+                <Button title="Play" onPress={playTrack} />
+
+
+            </View>
+
+            <ShowLyrics />
+        </View>
+    );
 }
+
+
+// function Listen() {
+//     const [isListening, setIsListening] = useState(false);
+
+//     async function toggleListening() {
+//         console.log(isListening, '??!!=-=-=-==-?', Voice.start)
+//         let services = await Voice.getSpeechRecognitionServices();
+//         console.log(services);
+//         try {
+//             if (isListening) {
+//                 await Voice.stop();
+//                 // SoundPlayer.stop()
+//                 setIsListening(false);
+//             } else {
+//                 // setResults([]);
+//                 await Voice.start("en-US");
+//                 // start();
+
+//                 // await SoundPlayer.playSoundFile('https://www.w3schools.com/tags/horse.mp3', 'mp3')
+//                 setIsListening(true);
+//             }
+//         } catch (e) {
+//             console.error(e);
+//         }
+
+
+//     }
+
+//     return (<Button
+//         title={isListening ? "Stop Recognizing" : "Start Recognizing"}
+//         onPress={toggleListening}
+
+//     />)
+// }
 
 
 

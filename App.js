@@ -24,8 +24,8 @@ console.log(Platform.OS, "NATIVE =-=- MODULES", NativeModules, VoiceChangingModu
 
 const App = () => {
   const audioTrackURL = 'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3';
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [song, setSong] = useState({})
+  // const [isPlaying, setIsPlaying] = useState(false)
+  // const [song, setSong] = useState({})
 
   const changeToAlein = () => {
     Platform.OS === 'android'
@@ -52,45 +52,45 @@ const App = () => {
   };
 
 
-  const playTrack = () => {
-    console.log('play', isPlaying)
-    Sound.setCategory('Playback');
-    if (!isPlaying) {
+  // const playTrack = () => {
+  //   console.log('play', isPlaying)
+  //   Sound.setCategory('Playback');
+  //   if (!isPlaying) {
 
 
-      // Load the sound file 'whoosh.mp3' from the app bundle
-      // See notes below about preloading sounds within initialization code below.
-      var whoosh = new Sound(audioTrackURL, '', (error) => {
-        if (error) {
-          console.log('failed to load the sound', error);
-          return;
-        }
-        // loaded successfully
-        console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
+  //     // Load the sound file 'whoosh.mp3' from the app bundle
+  //     // See notes below about preloading sounds within initialization code below.
+  //     var whoosh = new Sound(audioTrackURL, '', (error) => {
+  //       if (error) {
+  //         console.log('failed to load the sound', error);
+  //         return;
+  //       }
+  //       // loaded successfully
+  //       console.log('duration in seconds: ' + whoosh.getDuration() + 'number of channels: ' + whoosh.getNumberOfChannels());
 
 
-        // Play the sound with an onEnd callback
-        whoosh.play((success) => {
-          if (success) {
-            console.log('successfully finished playing');
-          } else {
-            console.log('playback failed due to audio decoding errors');
-          }
-        });
-      });
-      setSong(whoosh)
-    } else {
-      song.stop()
-    }
+  //       // Play the sound with an onEnd callback
+  //       whoosh.play((success) => {
+  //         if (success) {
+  //           console.log('successfully finished playing');
+  //         } else {
+  //           console.log('playback failed due to audio decoding errors');
+  //         }
+  //       });
+  //     });
+  //     setSong(whoosh)
+  //   } else {
+  //     song.stop()
+  //   }
 
-    setIsPlaying(!isPlaying)
-  }
+  //   setIsPlaying(!isPlaying)
+  // }
 
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={'#e4e5ea'} />
-      <Button title="Play" onPress={playTrack} />
+      {/* <Button title="Play" onPress={playTrack} /> */}
 
       <VoiceStuff />
       {/* <Text style={styles.title}>Voice Changer</Text>
