@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   Text, StatusBar, View, StyleSheet,
-  Platform, TouchableOpacity, Image, Button, NativeModules
+  Platform, TouchableOpacity, Image, Button, NativeModules,
+  requireNativeComponent
 } from 'react-native';
 
 import Sound from 'react-native-sound'
@@ -10,7 +11,12 @@ import Sound from 'react-native-sound'
 import VoiceStuff from './VoiceStuff'
 
 const { VoiceChangingModule } = NativeModules;
-console.log(Platform.OS, "NATIVE =-=- MODULES", NativeModules, VoiceChangingModule)
+// const CounterView = requireNativeComponent("CounterView")
+
+console.log(Platform.OS, "NATIVE =-=- MODULES", NativeModules, VoiceChangingModule,)
+
+// VoiceChangingModule.getCount(val => console.log(val, 'val'))
+
 // console.log(NativeModules.Counter)
 
 // NativeModules.Counter.increment()
@@ -28,9 +34,10 @@ const App = () => {
   // const [song, setSong] = useState({})
 
   const changeToAlein = () => {
+    console.log(Platform.OS, VoiceChangingModule)
     Platform.OS === 'android'
       ? VoiceChangingModule.changeVoiceToAlien(audioTrackURL)
-      : VoiceChangingModule.changeVoiceToAlien();
+      : VoiceChangingModule.changeVoiceToAlien(res => console.log(res, '????'))
   };
 
   const changeToChild = () => {
@@ -92,7 +99,21 @@ const App = () => {
       <StatusBar barStyle="dark-content" backgroundColor={'#e4e5ea'} />
       {/* <Button title="Play" onPress={playTrack} /> */}
 
+      {/* <CounterView style={styles.wrapper} />
+
+      <TouchableOpacity onPress={() => changeToAlein()}>
+        <Image
+          source={{
+            uri:
+              'https://icons.iconarchive.com/icons/google/noto-emoji-smileys/256/10101-alien-icon.png',
+          }}
+          resizeMode={'contain'}
+          style={styles.icon}
+        /><Text>WTF</Text>
+      </TouchableOpacity> */}
+
       <VoiceStuff />
+
       {/* <Text style={styles.title}>Voice Changer</Text>
       <Text style={styles.title}> Change Voice Effects </Text>
       <View style={styles.iconsContainer}>
@@ -153,38 +174,50 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     alignItems: 'center',
   },
-  // title: {
-  //   fontSize: 20,
-  //   color: '#000',
-  //   marginVertical: 25,
+  title: {
+    fontSize: 20,
+    color: '#000',
+    marginVertical: 25,
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    width: '100%',
+    paddingHorizontal: 50,
+  },
+  warningText: {
+    color: 'red',
+    fontWeight: 'bold',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+  },
+  spacing: {
+    marginVertical: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  icon: {
+    height: 40,
+    width: 40,
+    marginBottom: 15,
+  },
+  // container: {
+  //   flex: 1, alignItems: "stretch"
   // },
-  // iconsContainer: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   justifyContent: 'space-evenly',
-  //   width: '100%',
-  //   paddingHorizontal: 50,
+  // wrapper: {
+  //   flex: 1, alignItems: "center", justifyContent: "center"
   // },
-  // warningText: {
-  //   color: 'red',
-  //   fontWeight: 'bold',
-  //   letterSpacing: 1.5,
-  //   textAlign: 'center',
+  // border: {
+  //   borderColor: "#eee", borderBottomWidth: 1
   // },
-  // spacing: {
-  //   marginVertical: 10,
-  // },
-  // row: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  //   width: '100%',
-  // },
-  // icon: {
-  //   height: 40,
-  //   width: 40,
-  //   marginBottom: 15,
-  // },
+  // button: {
+  //   fontSize: 50, color: "orange"
+  // }
 });
 
 export default App;

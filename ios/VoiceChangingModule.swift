@@ -20,23 +20,60 @@ class VoiceChangingModule: NSObject {
   @objc
   func changeVoiceToAlien() {
     print("ALIENs")
-
+    
     engine = AVAudioEngine()
-    guard let url = Bundle.main.url(forResource: "sound_sample", withExtension: "mp3") else { return }
+    guard let url = Bundle.main.url(forResource: "song", withExtension: "mp3") else { return }
     do {
       try self.audioFile = AVAudioFile(forReading: url)
+      if let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: file.fileFormat.sampleRate, channels: 1, interleaved: false) {
+              if let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 1024) {
+                  try! file.read(into: buf)
+
+                  // this makes a copy, you might not want that
+                  let floatArray = UnsafeBufferPointer(start: buf.floatChannelData![0], count:Int(buf.frameLength))
+                  // convert to data
+                  var data = Data()
+                  for buf in floatArray {
+                      data.append(withUnsafeBytes(of: buf) { Data($0) })
+                  }
+                print("datadatadata")
+                print(data)
+                
+
+                
+                
+                
+                  // use the data if required.
+              }
+          }
+      
+      
     } catch {
       print("Error in audioFile")
     }
+    
+    
     playModifiedSound(value: -1000, rateOrPitch: "pitch")
   }
+  
+  
+  @objc
+  func getCount(_ callback: RCTResponseSenderBlock) {
+                  callback([
+                    "count",               // variable
+                    123.9,               // int or float
+                    "third argument",    // string
+                    [1, 2.2, "3"],       // array
+                    ["a": 1, "b": 2]     // object
+                  ])
+              }
   
   @objc
   func changeVoiceToChild() {
     print("ALIENs")
 
     engine = AVAudioEngine()
-    guard let url = Bundle.main.url(forResource: "sound_sample", withExtension: "mp3") else { return }
+    guard let url = Bundle.main.url(forResource: "song", withExtension: "mp3") else { return }
     do {
       try self.audioFile = AVAudioFile(forReading: url)
     } catch {
@@ -48,7 +85,7 @@ class VoiceChangingModule: NSObject {
   @objc
   func speedUpVoice() {
     engine = AVAudioEngine()
-    guard let url = Bundle.main.url(forResource: "sound_sample", withExtension: "mp3") else { return }
+    guard let url = Bundle.main.url(forResource: "song", withExtension: "mp3") else { return }
     do {
       try self.audioFile = AVAudioFile(forReading: url)
     } catch {
@@ -60,7 +97,7 @@ class VoiceChangingModule: NSObject {
   @objc
   func slowDownVoice() {
     engine = AVAudioEngine()
-    guard let url = Bundle.main.url(forResource: "sound_sample", withExtension: "mp3") else { return }
+    guard let url = Bundle.main.url(forResource: "song", withExtension: "mp3") else { return }
     do {
       try self.audioFile = AVAudioFile(forReading: url)
     } catch {

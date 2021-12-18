@@ -15,7 +15,7 @@ export default function App() {
     console.log('does this get reset somehow?')
     // const [results, setResults] = useState([] as string[]);
 
-    const audioTrackURL = 'https://previews.customer.envatousercontent.com/files/207000702/preview.mp3' //'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3' //`https://previews.customer.envatousercontent.com/files/207000702/preview.mp3` //'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3';
+    const audioTrackURL = `song.mp3` //`https://audio.jukehost.co.uk/LhnMKCU6oWC8aAXQwNJmofwJvQmAmMfh` //'https://previews.customer.envatousercontent.com/files/207000702/preview.mp3' //'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3' //`https://previews.customer.envatousercontent.com/files/207000702/preview.mp3` //'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3';
 
     const [isPlaying, setIsPlaying] = useState(false)
     const [song, setSong] = useState({})
@@ -76,7 +76,7 @@ export default function App() {
 
             // Load the sound file 'whoosh.mp3' from the app bundle
             // See notes below about preloading sounds within initialization code below.
-            var whoosh = new Sound(audioTrackURL, '', (error) => {
+            var whoosh = new Sound(audioTrackURL, Sound.MAIN_BUNDLE, (error) => {
                 if (error) {
                     console.log('failed to load the sound', error);
                     return;
@@ -108,7 +108,7 @@ export default function App() {
         <View style={{ width: '100%' }} >
             <View>
 
-                <Button title="Play" onPress={playTrack} />
+                <Button title={isListening ? 'Stop' : 'Flow'} onPress={playTrack} />
 
 
             </View>
@@ -119,65 +119,22 @@ export default function App() {
 }
 
 
-// function Listen() {
-//     const [isListening, setIsListening] = useState(false);
-
-//     async function toggleListening() {
-//         console.log(isListening, '??!!=-=-=-==-?', Voice.start)
-//         let services = await Voice.getSpeechRecognitionServices();
-//         console.log(services);
-//         try {
-//             if (isListening) {
-//                 await Voice.stop();
-//                 // SoundPlayer.stop()
-//                 setIsListening(false);
-//             } else {
-//                 // setResults([]);
-//                 await Voice.start("en-US");
-//                 // start();
-
-//                 // await SoundPlayer.playSoundFile('https://www.w3schools.com/tags/horse.mp3', 'mp3')
-//                 setIsListening(true);
-//             }
-//         } catch (e) {
-//             console.error(e);
-//         }
-
-
-//     }
-
-//     return (<Button
-//         title={isListening ? "Stop Recognizing" : "Start Recognizing"}
-//         onPress={toggleListening}
-
-//     />)
-// }
-
-
-
-// [
-//     {
-//         word: 'blah',
-//         rhymes: [ 'ma', 'pa', 'haha']
-//     },
-
-
-// ]
 function findRhyme({ word }) {
 
     return fetch(`https://api.datamuse.com/words?rel_rhy=${word}`)
         .then(res => res.json())
         .then(results => {
-            return results.slice(0, 5)
+            return results.slice(0, 8)
         })
         .catch(console.error)
 }
 
+let i = 0
 
 function ShowLyrics() {
-    console.log('show')
     const [lyrics, setLyrics] = useState([]);
     const [verse, setVerse] = useState([] as string[])
+    // console.log('show', verse.length)
 
     useEffect(() => {
         console.log("uno")
@@ -190,25 +147,31 @@ function ShowLyrics() {
     async function onSpeechResults(e: SpeechResultsEvent) {
 
         //[Knock, Knock]
-        //[Knock, Knock, Who's, there]
 
         let words = e.value[0].split(' ')
-        let newLyrics = []
-        for (let word of words) {
-            let rhymes = await findRhyme({ word })
-            console.log(rhymes, '.')
-            newLyrics.push({ word, rhymes })
-        }
-        setLyrics(newLyrics)
-        // let words = e.value[0].split(' ').map(word => ({ word: word, rhymes: [] }))
-        // console.log(words, 'results', lyrics)
 
-        // setLyrics(words)
-        // setVerse(words)
+        setVerse((verse) => {
+            let newWords = words.filter(word => verse.indexOf(word) === -1)
+            for (let word of newWords) {
+                findRhyme({ word }).then(rhymes => {
+
+                    i++
+                    console.log(i, ' total requests')
+
+                    setLyrics((lyrics) => {
+
+                        return [...lyrics, { word, rhymes }]
+                    })
+
+                })
+            }
+
+            return words
+        })
 
     }
 
-    console.log(lyrics, ' -=-=-=-=-')
+    // console.log(lyrics, ' -=-=-=-=-')
     return (
 
         <View>
@@ -236,7 +199,7 @@ function ShowLyrics() {
                         return (
 
 
-                            <Text style={{ display: 'flex', flexDirection: 'row' }} key={`word-${i}`}>
+                            <Text style={{ display: 'flex', flexDirection: 'row' }} key={`${word}-${i}`}>
                                 {word.word + ' '}
                             </Text>
 
@@ -263,23 +226,15 @@ function ShowLyrics() {
                 <ScrollView
                     style={{
                         display: 'flex',
-                        // flexDirection: 'row',
-                        // flexWrap: 'wrap',
                         height: 200,
-                        // justifyContent: 'space-around',
                         zIndex: -1,
                         margin: 'auto',
                         width: '100%',
-                        // alignItems: 'center',
-                        // position: 'absolute',
-                        // left: 0,
                         transform: [{ rotate: '180deg' }],
                         direction: 'rtl',
                         overflow: 'scroll'
-                        // right: 0,
-                        // bottom: '50%'
                     }}
-                // contentContainerStyle={{ justifyContent: 'space-around', alignItems: 'flex-start' }}
+
                 >
                     <View style={{
                         overflow: 'hidden',
@@ -288,14 +243,14 @@ function ShowLyrics() {
                         {lyrics.map((word, i) => {
                             return (
 
-                                <View style={{ margin: 5, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                <View key={`${word}-${i}`} style={{ margin: 5, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 
 
                                     <Text style={{ flexWrap: 'nowrap', flexDirection: 'row', display: 'flex', fontSize: 16, overflow: 'hidden' }} key={`word-${i}`}>
                                         {word.word + ' '}
                                     </Text>
                                     <View style={{ display: 'flex', justifyContent: 'center', flexDirection: 'row', overflow: 'hidden', width: '100%' }}>
-                                        {word.rhymes.map(rhyme => <Text style={{ fontSize: 11, color: '#888' }}> {rhyme.word} </Text>)}
+                                        {word.rhymes.map((rhyme, i) => <Text key={`${rhyme}-${i}`} style={{ fontSize: 11, color: '#888' }}> {rhyme.word} </Text>)}
                                     </View>
                                 </View>
                             )
@@ -303,20 +258,14 @@ function ShowLyrics() {
                     </View>
                 </ScrollView >
             </View>
+            {/* <View style={{ display: 'flex', flexDirection: 'row' }}>
+                {verse.map(word => <Text>{word + ' '}</Text>)}
+            </View> */}
         </View>
     )
 }
 
 
-
-{/* <ScrollView
-style={{ flex: 1 }}
-contentContainerStyle={styles.scrollview}
-scrollEnabled={scrollEnabled}
-onContentSizeChange={this.onContentSizeChange}
->
-<View style={styles.content}></View>
-</ScrollView> */}
 
 const styles = StyleSheet.create({
     container: {
@@ -329,19 +278,3 @@ const styles = StyleSheet.create({
 
 
 
-// const start = async () => {
-//     // Set up the player
-//     await TrackPlayer.setupPlayer();
-
-//     // Add a track to the queue
-//     await TrackPlayer.add({
-//         id: 'trackId',
-//         url: `https://www.chosic.com/wp-content/uploads/2021/07/The-Epic-Hero-Epic-Cinematic-Keys-of-Moon-Music.mp3`, //require('track.mp3'),
-//         title: 'Track Title',
-//         artist: 'Track Artist',
-//         // artwork: require('track.png')
-//     });
-
-//     // Start playing it
-//     await TrackPlayer.play();
-// };

@@ -12,6 +12,7 @@
 RCT_EXTERN_MODULE(VoiceChangingModule, NSObject)
 RCT_EXTERN_METHOD(changeVoiceToAlien)
 RCT_EXTERN_METHOD(changeVoiceToChild)
+
 RCT_EXTERN_METHOD(speedUpVoice)
 RCT_EXTERN_METHOD(slowDownVoice)
 @end
