@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, StyleSheet, Text, View, ScrollView } from "react-native";
 // import SoundPlayer from 'react-native-sound-player'
 // import TrackPlayer from 'react-native-track-player';
@@ -134,6 +134,9 @@ let i = 0
 function ShowLyrics() {
     const [lyrics, setLyrics] = useState([]);
     const [verse, setVerse] = useState([] as string[])
+
+    const prevLyricsRef = useRef(null);
+
     // console.log('show', verse.length)
 
     useEffect(() => {
@@ -144,34 +147,95 @@ function ShowLyrics() {
         };
     }, [])
 
+
+    // let lastStr = "dog cat my"
+    // let currentStr = "dog cat my dog poodle"
+
+    // let theLyrics = [
+    //     {
+    //         word: 'dog',
+    //         rhymes: ['fog', 'smog']
+    //     }, {
+    //         word: 'cat',
+    //         rhymes: ['hat', 'bat']
+    //     },
+    //     {
+    //         word: 'my',
+    //         rhymes: ['sly', 'fly']
+    //     },
+    //     {
+    //         word: 'dog',
+    //         rhymes: ['fog', 'smog']
+    //     }
+
+    // ]
+
+
+
+    // async function onSpeechResults(e: SpeechResultsEvent) {
+    //     //[Knock, Knock]
+    //     let words = e.value[0]
+
+    //     console.log(words)
+
+    //     setVerse((verse) => {
+    //         console.log(words, '-=-=-=', verse)
+    //         let newWords = words.replace(prevLyricsRef.current, '').trim()//.split(' ')
+    //         prevLyricsRef.current = newWords
+    //         console.log(newWords, ' newWordsr')
+    //         for (let word of newWords.split(' ')) {
+    //             if (!word) return
+    //             findRhyme({ word }).then(rhymes => {
+    //                 i++
+    //                 console.log(i, ' total requests')
+    //                 setLyrics((lyrics) => {
+    //                     return [...lyrics, { word, rhymes }]
+    //                 })
+
+    //             })
+    //         }
+    //         return words
+    //     })
+    // }
+
+
+    function isThisAPreviousRhyme({ word, lyrics }) {
+        let match = false;
+        for (let lyric of lyrics) {
+            for (let rhyme of lyric.rhymes) {
+                if (rhyme.word.toLowerCase() == word.toLowerCase()) {
+                    rhyme.match = true
+                    //return true
+                    match = true
+                }
+            }
+        }
+        return match
+    }
+
+
     async function onSpeechResults(e: SpeechResultsEvent) {
-
         //[Knock, Knock]
-
         let words = e.value[0].split(' ')
-
         setVerse((verse) => {
             let newWords = words.filter(word => verse.indexOf(word) === -1)
             for (let word of newWords) {
                 findRhyme({ word }).then(rhymes => {
-
                     i++
-                    console.log(i, ' total requests')
+                    // console.log(i, ' total requests')
+
 
                     setLyrics((lyrics) => {
-
-                        return [...lyrics, { word, rhymes }]
+                        let obj = { word, rhymes, prevMatch: isThisAPreviousRhyme({ word, lyrics: [...lyrics, { word, rhymes }] }) }
+                        return [...lyrics, obj]
                     })
 
                 })
             }
-
             return words
         })
-
     }
 
-    // console.log(lyrics, ' -=-=-=-=-')
     return (
 
         <View>
@@ -190,7 +254,6 @@ function ShowLyrics() {
                 <View style={{
                     transform: [{ rotate: '180deg' }],
                     display: 'flex',
-                    // alignItems: 'flex-end',
                     flexDirection: 'row',
                     padding: 10
 
@@ -210,18 +273,12 @@ function ShowLyrics() {
             <View style={{
                 backgroundColor: '#eee',
                 width: '100%',
-                // height: '100%',
-                // marginTop: '33%',
                 height: 500,
                 display: 'flex',
                 position: 'absolute',
-                // top: 50,
-                // left: 20,
                 paddingBottom: 150,
                 justifyContent: 'center',
                 alignItems: 'center'
-
-                // alignItems: 'center'
             }}>
                 <ScrollView
                     style={{
@@ -250,7 +307,14 @@ function ShowLyrics() {
                                         {word.word + ' '}
                                     </Text>
                                     <View style={{ display: 'flex', justifyContent: 'center', flexDirection: 'row', overflow: 'hidden', width: '100%' }}>
-                                        {word.rhymes.map((rhyme, i) => <Text key={`${rhyme}-${i}`} style={{ fontSize: 11, color: '#888' }}> {rhyme.word} </Text>)}
+                                        {word.rhymes.map((rhyme, i) =>
+
+                                            <Text
+                                                key={`${rhyme}-${i}`}
+
+                                                style={{ fontSize: 11, color: rhyme.match ? 'red' : '#888' }}> {rhyme.word} </Text>
+
+                                        )}
                                     </View>
                                 </View>
                             )
