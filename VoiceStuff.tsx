@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, StyleSheet, Text, View, ScrollView } from "react-native";
+import { Button, StyleSheet, Text, View, ScrollView, Image } from "react-native";
+import { unsplash_access_key, pixabayKey } from './.env.js'
 // import SoundPlayer from 'react-native-sound-player'
 // import TrackPlayer from 'react-native-track-player';
 import Sound from 'react-native-sound'
@@ -8,7 +9,9 @@ import Voice, {
     SpeechResultsEvent,
     SpeechErrorEvent,
     SpeechRecognizedEvent,
-    SpeechEndEvent
+    SpeechEndEvent,
+    SpeechVolumeChanged
+
 } from "@react-native-voice/voice";
 
 export default function App() {
@@ -20,27 +23,6 @@ export default function App() {
     const [isPlaying, setIsPlaying] = useState(false)
     const [song, setSong] = useState({})
     const [isListening, setIsListening] = useState(false);
-
-    async function onSpeechEnd(e: SpeechEndEvent) {
-
-    }
-
-
-    async function onSpeechRecognized(e: SpeechRecognizedEvent) {
-        console.log(e, ' recognized!!')
-
-    }
-
-
-    async function onSpeechPartialResults(e: SpeechResultsEvent) {
-        // console.log(e.value, ' SpeechPartialResultsEvent')
-    }
-
-
-
-    function onSpeechError(e: SpeechErrorEvent) {
-        console.log(e, '000');
-    }
 
 
     async function toggleListening() {
@@ -102,13 +84,12 @@ export default function App() {
         setIsPlaying(!isPlaying)
     }
 
-
-
     return (
         <View style={{ width: '100%' }} >
             <View>
+                <Button title={isPlaying ? 'Stop' : 'Play Track'} onPress={playTrack} />
 
-                <Button title={isListening ? 'Stop' : 'Flow'} onPress={playTrack} />
+                <Button title={isListening ? 'Stop' : 'Listen'} onPress={toggleListening} />
 
 
             </View>
@@ -120,11 +101,10 @@ export default function App() {
 
 
 function findRhyme({ word }) {
-
     return fetch(`https://api.datamuse.com/words?rel_rhy=${word}`)
         .then(res => res.json())
         .then(results => {
-            return results.slice(0, 8)
+            return results.slice(0, 10)
         })
         .catch(console.error)
 }
@@ -134,69 +114,22 @@ let i = 0
 function ShowLyrics() {
     const [lyrics, setLyrics] = useState([]);
     const [verse, setVerse] = useState([] as string[])
-
+    const [rhymers, setRhymers] = useState(['', '', ''])
+    const [pause, setPause] = useState(null)
     const prevLyricsRef = useRef(null);
 
     // console.log('show', verse.length)
 
     useEffect(() => {
-        console.log("uno")
         Voice.onSpeechResults = onSpeechResults;
+        Voice.onSpeechEnd = onSpeechEnd;
+        Voice.onSpeechPartialResults = onSpeechPartialResults;
+        Voice.onSpeechVolumeChanged = onSpeechVolumeChanged;
         return () => {
             Voice.destroy().then(Voice.removeAllListeners);
         };
     }, [])
 
-
-    // let lastStr = "dog cat my"
-    // let currentStr = "dog cat my dog poodle"
-
-    // let theLyrics = [
-    //     {
-    //         word: 'dog',
-    //         rhymes: ['fog', 'smog']
-    //     }, {
-    //         word: 'cat',
-    //         rhymes: ['hat', 'bat']
-    //     },
-    //     {
-    //         word: 'my',
-    //         rhymes: ['sly', 'fly']
-    //     },
-    //     {
-    //         word: 'dog',
-    //         rhymes: ['fog', 'smog']
-    //     }
-
-    // ]
-
-
-
-    // async function onSpeechResults(e: SpeechResultsEvent) {
-    //     //[Knock, Knock]
-    //     let words = e.value[0]
-
-    //     console.log(words)
-
-    //     setVerse((verse) => {
-    //         console.log(words, '-=-=-=', verse)
-    //         let newWords = words.replace(prevLyricsRef.current, '').trim()//.split(' ')
-    //         prevLyricsRef.current = newWords
-    //         console.log(newWords, ' newWordsr')
-    //         for (let word of newWords.split(' ')) {
-    //             if (!word) return
-    //             findRhyme({ word }).then(rhymes => {
-    //                 i++
-    //                 console.log(i, ' total requests')
-    //                 setLyrics((lyrics) => {
-    //                     return [...lyrics, { word, rhymes }]
-    //                 })
-
-    //             })
-    //         }
-    //         return words
-    //     })
-    // }
 
 
     function isThisAPreviousRhyme({ word, lyrics }) {
@@ -213,20 +146,51 @@ function ShowLyrics() {
         return match
     }
 
-
     async function onSpeechResults(e: SpeechResultsEvent) {
+        console.log('on result')
+
+
         //[Knock, Knock]
         let words = e.value[0].split(' ')
+
         setVerse((verse) => {
             let newWords = words.filter(word => verse.indexOf(word) === -1)
             for (let word of newWords) {
-                findRhyme({ word }).then(rhymes => {
+                findRhyme({ word }).then(async rhymes => {
                     i++
                     // console.log(i, ' total requests')
+                    let imageUrl = ''
+                    let synonyms = []
+                    try {
+                        //let res = await fetch(`https://api.unsplash.com/photos/random?client_id=${unsplash_access_key}&query=${word}`)
+                        let res = await fetch(`https://pixabay.com/api?key=${pixabayKey}&q=${word}`)
+                        let json = await res.json()
+                        imageUrl = json?.hits ? json.hits[0].previewURL : ''
+
+                        let syn = await fetch(`https://api.datamuse.com/words?rel_syn=${word}`)
+                        synonyms = await syn.json()
+                        synonyms = synonyms.slice(0, 3)
+                        console.log(synonyms, ' 2222 ')
+                        //image = json.hits[Math.floor(Math.random() * json.hits.length)].previewURL
+                    } catch (err) {
+                        console.log(err, ' but dont crash')
+                    }
+
+
+                    console.log('image is ', imageUrl)
 
 
                     setLyrics((lyrics) => {
-                        let obj = { word, rhymes, prevMatch: isThisAPreviousRhyme({ word, lyrics: [...lyrics, { word, rhymes }] }) }
+
+
+                        let obj = {
+                            word,
+                            rhymes,
+                            prevMatch: isThisAPreviousRhyme({ word, lyrics: [...lyrics, { word, rhymes }] }),
+                            imageUrl,
+                            synonyms
+                        }
+
                         return [...lyrics, obj]
                     })
 
@@ -236,10 +200,10 @@ function ShowLyrics() {
         })
     }
 
+
     return (
 
         <View>
-
             <ScrollView style={{
                 padding: 5,
                 backgroundColor: 'white',
@@ -276,7 +240,7 @@ function ShowLyrics() {
                 height: 500,
                 display: 'flex',
                 position: 'absolute',
-                paddingBottom: 150,
+                paddingBottom: 250,
                 justifyContent: 'center',
                 alignItems: 'center'
             }}>
@@ -321,7 +285,11 @@ function ShowLyrics() {
                         })}
                     </View>
                 </ScrollView >
+                <Timer lyrics={lyrics} verse={verse} rhymers={rhymers} setRhymers={setRhymers} />
             </View>
+
+
+
             {/* <View style={{ display: 'flex', flexDirection: 'row' }}>
                 {verse.map(word => <Text>{word + ' '}</Text>)}
             </View> */}
@@ -342,3 +310,189 @@ const styles = StyleSheet.create({
 
 
 
+
+function Timer({ lyrics, verse, rhymers, setRhymers }) {
+    useEffect(() => {
+
+        const timer = () => setTimeout(() => {
+            // let lastWord = verse.pop()
+            let lastWord = lyrics[lyrics.length - 1]
+
+            console.log('lastWord', lastWord?.word)
+            if (!lastWord?.word) return
+            let newRhymers = [...rhymers]
+            newRhymers.shift()
+
+            let last = lyrics.find(l => l.word === lastWord)
+            console.log(last?.word, 'last')
+            if (last) {
+                newRhymers.push(last)
+                setRhymers(newRhymers)
+            } else {
+                newRhymers.push(lastWord)
+                setRhymers(newRhymers)
+            }
+        }, 500);
+        const timerId = timer();
+        return () => {
+            clearTimeout(timerId);
+        };
+    }, [lyrics])
+
+    console.log('rhymers', rhymers.map(r => r.word))
+
+    return (
+        <View style={{
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-evenly',
+            backgroundColor: 'white',
+            bottom: -200,
+            zIndex: 1212,
+            width: '100%'
+        }}>
+            {rhymers.map((lyric, i) => {
+
+                const rhymes = lyric.rhymes ? lyric.rhymes.map((eachRhyme, i) => {
+                    return (
+                        <Text
+                            key={i}
+                            style={{ fontSize: 10 }}
+                        >{eachRhyme.word}
+                        </Text>
+                    )
+                }) : []
+
+                const synonyms = lyric.synonyms ? lyric.synonyms.map((eachSynonym, i) => {
+                    return (
+                        <Text
+                            key={i}
+                            style={{ fontSize: 10 }}
+                        >{eachSynonym.word}
+                        </Text>
+                    )
+                }) : []
+
+
+                return (
+                    <>
+
+                        <View
+                            style={{ display: 'flex', flexDirection: 'column' }}
+                            key={i}
+                        >
+                            <Text
+                                key={i}
+                                style={{
+                                    fontSize: 20
+                                }}
+
+                            >{lyric?.word}</Text>
+
+                            {lyric.imageUrl ?
+
+                                <Image
+                                    style={{ width: 100, height: 100 }}
+                                    source={{ uri: lyric?.imageUrl }}
+                                />
+                                : null
+                            }
+                            <View>
+                                <Text>rhymes:</Text>
+                                {rhymes}
+                            </View>
+                            <View>
+                                <Text>synonyms:</Text>
+                                {synonyms}
+                            </View>
+                        </View>
+
+                    </>
+
+                )
+            }
+            )}
+        </View>
+    )
+}
+
+
+
+
+
+
+
+
+
+
+
+// let lastStr = "dog cat my"
+// let currentStr = "dog cat my dog poodle"
+
+// let theLyrics = [
+//     {
+//         word: 'dog',
+//         rhymes: ['fog', 'smog']
+//     }, {
+//         word: 'cat',
+//         rhymes: ['hat', 'bat']
+//     },
+//     {
+//         word: 'my',
+//         rhymes: ['sly', 'fly']
+//     },
+//     {
+//         word: 'dog',
+//         rhymes: ['fog', 'smog']
+//     }
+
+// ]
+
+
+
+// async function onSpeechResults(e: SpeechResultsEvent) {
+//     //[Knock, Knock]
+//     let words = e.value[0]
+
+//     console.log(words)
+
+//     setVerse((verse) => {
+//         console.log(words, '-=-=-=', verse)
+//         let newWords = words.replace(prevLyricsRef.current, '').trim()//.split(' ')
+//         prevLyricsRef.current = newWords
+//         console.log(newWords, ' newWordsr')
+//         for (let word of newWords.split(' ')) {
+//             if (!word) return
+//             findRhyme({ word }).then(rhymes => {
+//                 i++
+//                 console.log(i, ' total requests')
+//                 setLyrics((lyrics) => {
+//                     return [...lyrics, { word, rhymes }]
+//                 })
+
+//             })
+//         }
+//         return words
+//     })
+// }
+
+
+
+
+async function onSpeechEnd(e: SpeechEndEvent) {
+    console.log('sppech end')
+}
+async function onSpeechRecognized(e: SpeechRecognizedEvent) {
+    console.log('speech recognized!!')
+
+}
+async function onSpeechPartialResults(e: SpeechResultsEvent) {
+    console.log(e.value, ' SpeechPartialResultsEvent')
+}
+async function onSpeechVolumeChanged(e: SpeechVolumeChanged) {
+    // console.log(e.value, ' SpeechVolumeChanged')
+}
+async function onSpeechError(e: SpeechErrorEvent) {
+    console.log(e, '000');
+}
